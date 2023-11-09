@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup> 
+		<ProjectReference Include="..\LuoCoreFastGithub.DomainResolve\LuoCoreFastGithub.DomainResolve.csproj" />
+	</ItemGroup>
+
+</Project>
