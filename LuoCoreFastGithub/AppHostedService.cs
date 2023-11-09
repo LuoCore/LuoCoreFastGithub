@@ -1,4 +1,5 @@
-﻿using LuoCoreFastGithub.Configuration;
+﻿using LuoCoreFastGithub;
+using LuoCoreFastGithub.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

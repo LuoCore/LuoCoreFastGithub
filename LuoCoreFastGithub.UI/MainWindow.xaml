@@ -164,7 +164,7 @@
 
             <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Header="打赏" Height="40" Width="60" Margin="5 0" FontSize="18">
                 <Grid Background="#f7f7f7">
-                    <Image Source="/zfbSH.jpg" Margin="16" />
+                    <Image Source="/Resource/zfbSH.jpg"  Margin="16" />
                 </Grid>
             </TabItem>
         </TabControl>

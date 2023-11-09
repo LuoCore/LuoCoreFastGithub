@@ -1,5 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />

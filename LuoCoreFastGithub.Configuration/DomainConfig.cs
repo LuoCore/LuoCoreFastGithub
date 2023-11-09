@@ -62,4 +62,5 @@ namespace LuoCoreFastGithub.Configuration
             return new TlsSniPattern(this.TlsSniPattern);
         } 
     }
+
 }
