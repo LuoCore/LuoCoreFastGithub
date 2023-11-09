@@ -1,0 +1,25 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/LuoCoreFastGithub/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub/obj
+/LuoCoreFastGithub.Configuration/obj
+/LuoCoreFastGithub.Configuration/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.DomainResolve/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.DomainResolve/obj
+/LuoCoreFastGithub.FlowAnalyze/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.FlowAnalyze/obj
+/LuoCoreFastGithub.Http/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.Http/obj
+/LuoCoreFastGithub.HttpServer/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.HttpServer/obj
+/LuoCoreFastGithub.PacketIntercept/bin/Debug/net7.0/win-x64
+/LuoCoreFastGithub.PacketIntercept/obj
+/LuoCoreFastGithub.UI/bin
+/LuoCoreFastGithub.UI/obj
+/LuoCoreFastGithub.UI/Properties/PublishProfiles
+/.vs/LuoCoreFastGithub/v17
+/.vs/ProjectEvaluation
+/.vs/LuoCoreFastGithub/FileContentIndex
+/.vs/LuoCoreFastGithub/DesignTimeBuild
