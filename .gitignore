@@ -23,3 +23,14 @@
 /.vs/ProjectEvaluation
 /.vs/LuoCoreFastGithub/FileContentIndex
 /.vs/LuoCoreFastGithub/DesignTimeBuild
+/LuoCoreFastGithub/Properties/PublishProfiles
+/LuoCoreFastGithub.Configuration/bin/Debug/net7.0
+/LuoCoreFastGithub.Configuration/bin/Release/net7.0
+/LuoCoreFastGithub.DomainResolve/bin/Debug/net7.0
+/LuoCoreFastGithub.DomainResolve/bin/Release/net7.0
+/LuoCoreFastGithub.FlowAnalyze/bin
+/LuoCoreFastGithub.Http/bin
+/LuoCoreFastGithub.HttpServer/bin
+/LuoCoreFastGithub.PacketIntercept/bin
+/Resources/Debug/net7.0
+/Resources/Release
