@@ -8,6 +8,8 @@
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
 		<TargetFramework>net7.0</TargetFramework>
+
+		<BaseOutputPath>D:\CodeRepository\Git\LuoCoreFastGithub\Resources</BaseOutputPath>
 	</PropertyGroup>
 
 
