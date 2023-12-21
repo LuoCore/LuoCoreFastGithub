@@ -34,3 +34,8 @@
 /LuoCoreFastGithub.PacketIntercept/bin
 /Resources/Debug/net7.0
 /Resources/Release
+*.pdb
+*.txt
+/Resources/Debug
+/LuoCoreFastGithub.DomainResolve/bin
+/LuoCoreFastGithub.Configuration/bin
