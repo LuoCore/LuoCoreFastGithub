@@ -43,7 +43,7 @@ namespace LuoCoreLuoCoreFastGithub
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             var version = ProductionVersion.Current;
-            this.logger.LogInformation($"{nameof(LuoCoreFastGithub)}启动完成，当前版本为v{version}，访问 https://github.com/dotnetcore/LuoCoreFastGithub 关注新版本");
+            this.logger.LogInformation($"{nameof(LuoCoreFastGithub)}启动完成，当前版本为v{version}，访问 https://github.com/LuoCore/LuoCoreFastGithub 关注新版本");
             return base.StartAsync(cancellationToken);
         }
 

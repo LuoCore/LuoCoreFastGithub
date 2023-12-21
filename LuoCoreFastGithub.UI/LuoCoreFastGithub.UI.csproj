@@ -5,10 +5,9 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<OutputType>WinExe</OutputType>
 		<LangVersion>8.0</LangVersion> 
-		<TargetFramework>net7.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
 		<ApplicationIcon>app.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
 		<StartupObject></StartupObject>
 		<BaseOutputPath>D:\CodeRepository\Git\LuoCoreFastGithub\Resources</BaseOutputPath>
@@ -16,6 +15,13 @@
 
 	<ItemGroup>
 		<Resource Include="Resource\*.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="bin\**" />
+	  <EmbeddedResource Remove="bin\**" />
+	  <None Remove="bin\**" />
+	  <Page Remove="bin\**" />
 	</ItemGroup>
 
 	<ItemGroup>

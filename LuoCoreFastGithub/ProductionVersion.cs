@@ -9,17 +9,26 @@ namespace LuoCoreFastGithub
     /// </summary>
     public class ProductionVersion : IComparable<ProductionVersion>
     {
-        private static readonly string? productionVersion = Assembly
-            .GetEntryAssembly()?
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion;
+        private static string? productionVersion;
+
 
         /// <summary>
         /// 获取当前应用程序的产品版本
         /// </summary>
-        public static ProductionVersion? Current { get; } = productionVersion == null ? null : Parse(productionVersion);
-         
-
+        public static ProductionVersion? Current
+        {
+            get
+            {
+                if (productionVersion == null)
+                {
+                    productionVersion = Assembly
+                        .GetEntryAssembly()?
+                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                        .InformationalVersion;
+                }
+                return productionVersion == null ? null : Parse(productionVersion);
+            }
+        }
         /// <summary>
         /// 版本
         /// </summary>
@@ -94,8 +103,21 @@ namespace LuoCoreFastGithub
         /// <returns></returns>
         public static ProductionVersion Parse(string productionVersion)
         {
-            const string VERSION = @"^\d+\.(\d+.){0,2}\d+";
-            var verion = Regex.Match(productionVersion, VERSION).Value;
+            if (string.IsNullOrEmpty(productionVersion))
+            {
+                throw new ArgumentException("productionVersion cannot be null or empty");
+            }
+
+            const string VERSION = @"^\d+\.\d+\.\d+";  // 匹配 X.X.X 格式的版本号
+            var match = Regex.Match(productionVersion, VERSION);
+            var verion = match.Success ? match.Value : "";
+
+
+            if (string.IsNullOrEmpty(verion))
+            {
+                throw new FormatException("Invalid productionVersion format");
+            }
+
             var subVersion = productionVersion[verion.Length..];
             return new ProductionVersion(Version.Parse(verion), subVersion);
         }

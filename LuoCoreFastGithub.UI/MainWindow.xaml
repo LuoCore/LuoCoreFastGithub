@@ -162,10 +162,33 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Header="打赏" Height="40" Width="60" Margin="5 0" FontSize="18">
-                <Grid Background="#f7f7f7">
-                    <Image Source="/Resource/zfbSH.jpg"  Margin="16" />
-                </Grid>
+        
+
+            <TabItem Style="{StaticResource TabItemExWithUnderLineStyle}" Header="支持" Height="40" Width="60" Margin="5 0" FontSize="18">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Background="#f7f7f7">
+                        <StackPanel>
+                            <TextBlock Text="扫描领取红包，然后打赏支持一下" HorizontalAlignment="Center"/>
+                            <StackPanel HorizontalAlignment="Center" Margin="0 10">
+                                <StackPanel>
+                                    <Image Source="/Resource/zfb_HB.jpg"  Margin="16" Width="300" Height="400"/>
+                                    <TextBlock Text="支付宝红包" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0 10">
+                                <StackPanel>
+                                    <Image Source="/Resource/zfbSH.jpg"  Margin="16" Width="260" Height="260"/>
+                                    <TextBlock Text="支付宝打赏" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <Image Source="/Resource/wx_GZH.jpg"  Margin="16" Width="260" Height="260"/>
+                                    <TextBlock Text="微信公众号" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

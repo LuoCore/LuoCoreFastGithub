@@ -103,11 +103,19 @@ namespace LuoCoreFastGithub.DomainResolve
             {
                 using var timeoutTokenSource = new CancellationTokenSource(this.connectTimeout);
                 using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTokenSource.Token);
-                using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
-
-                addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
-                return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normalElapsedExpiration);
+                if (Enum.IsDefined(typeof(AddressFamily), endPoint.AddressFamily))
+                {
+                    using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    await socket.ConnectAsync(endPoint, linkedTokenSource.Token);
+                    addressElapsed = new AddressElapsed(endPoint.Address, stopWatch.Elapsed);
+                    return this.addressElapsedCache.Set(endPoint, addressElapsed, this.normalElapsedExpiration);
+                }
+                else
+                {
+                    return addressElapsed;
+                }
+              
+              
             }
             catch (Exception ex)
             {
