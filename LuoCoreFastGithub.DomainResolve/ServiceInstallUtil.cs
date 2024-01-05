@@ -1,6 +1,9 @@
 ﻿using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using static PInvoke.AdvApi32;
+
+
+
 
 namespace LuoCoreFastGithub.DomainResolve
 {
@@ -14,25 +17,26 @@ namespace LuoCoreFastGithub.DomainResolve
         /// <param name="startType"></param>
         /// <returns></returns>
         [SupportedOSPlatform("windows")]
-        public static bool InstallAndStartService(string serviceName, string binaryPath, ServiceStartType startType = ServiceStartType.SERVICE_AUTO_START)
+        public static bool InstallAndStartService(string serviceName, string binaryPath, PInvoke.AdvApi32.ServiceStartType startType = PInvoke.AdvApi32.ServiceStartType.SERVICE_AUTO_START)
         {
-            using var hSCManager = OpenSCManager(null, null, ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
+     
+            using var hSCManager = PInvoke.AdvApi32.OpenSCManager(null, null, PInvoke.AdvApi32.ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
             if (hSCManager.IsInvalid == true)
             {
                 return false;
             }
 
-            var hService = OpenService(hSCManager, serviceName, ServiceAccess.SERVICE_ALL_ACCESS);
+            var hService = PInvoke.AdvApi32.OpenService(hSCManager, serviceName, PInvoke.AdvApi32.ServiceAccess.SERVICE_ALL_ACCESS);
             if (hService.IsInvalid == true)
             {
-                hService = CreateService(
+                hService = PInvoke.AdvApi32.CreateService(
                     hSCManager,
                     serviceName,
                     serviceName,
-                    ServiceAccess.SERVICE_ALL_ACCESS,
-                    ServiceType.SERVICE_WIN32_OWN_PROCESS,
+                    PInvoke.AdvApi32.ServiceAccess.SERVICE_ALL_ACCESS,
+                    PInvoke.AdvApi32.ServiceType.SERVICE_WIN32_OWN_PROCESS,
                     startType,
-                    ServiceErrorControl.SERVICE_ERROR_NORMAL,
+                    PInvoke.AdvApi32.ServiceErrorControl.SERVICE_ERROR_NORMAL,
                     Path.GetFullPath(binaryPath),
                     lpLoadOrderGroup: null,
                     lpdwTagId: 0,
@@ -48,7 +52,7 @@ namespace LuoCoreFastGithub.DomainResolve
 
             using (hService)
             {
-                return StartService(hService, 0, null);
+                return PInvoke.AdvApi32.StartService(hService, 0, null);
             }
         }
 
@@ -60,29 +64,29 @@ namespace LuoCoreFastGithub.DomainResolve
         [SupportedOSPlatform("windows")]
         public static bool StopAndDeleteService(string serviceName)
         {
-            using var hSCManager = OpenSCManager(null, null, ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
+            using var hSCManager = PInvoke.AdvApi32.OpenSCManager(null, null, PInvoke.AdvApi32.ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
             if (hSCManager.IsInvalid == true)
             {
                 return false;
             }
 
-            using var hService = OpenService(hSCManager, serviceName, ServiceAccess.SERVICE_ALL_ACCESS);
+            using var hService = PInvoke.AdvApi32.OpenService(hSCManager, serviceName, PInvoke.AdvApi32.ServiceAccess.SERVICE_ALL_ACCESS);
             if (hService.IsInvalid == true)
             {
                 return true;
             }
 
-            var status = new SERVICE_STATUS();
-            if (QueryServiceStatus(hService, ref status) == true)
+            var status = new PInvoke.AdvApi32.SERVICE_STATUS();
+            if (PInvoke.AdvApi32.QueryServiceStatus(hService, ref status) == true)
             {
-                if (status.dwCurrentState != ServiceState.SERVICE_STOP_PENDING &&
-                    status.dwCurrentState != ServiceState.SERVICE_STOPPED)
+                if (status.dwCurrentState != PInvoke.AdvApi32.ServiceState.SERVICE_STOP_PENDING &&
+                    status.dwCurrentState != PInvoke.AdvApi32.ServiceState.SERVICE_STOPPED)
                 {
-                    ControlService(hService, ServiceControl.SERVICE_CONTROL_STOP, ref status);
+                    PInvoke.AdvApi32.ControlService(hService, PInvoke.AdvApi32.ServiceControl.SERVICE_CONTROL_STOP, ref status);
                 }
             }
 
-            return DeleteService(hService);
+            return PInvoke.AdvApi32.DeleteService(hService);
         }
     }
 }
