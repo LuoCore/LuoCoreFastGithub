@@ -4,7 +4,6 @@ using System.Runtime.Versioning;
 
 
 
-
 namespace LuoCoreFastGithub.DomainResolve
 {
     public static class ServiceInstallUtil
@@ -19,7 +18,7 @@ namespace LuoCoreFastGithub.DomainResolve
         [SupportedOSPlatform("windows")]
         public static bool InstallAndStartService(string serviceName, string binaryPath, PInvoke.AdvApi32.ServiceStartType startType = PInvoke.AdvApi32.ServiceStartType.SERVICE_AUTO_START)
         {
-     
+
             using var hSCManager = PInvoke.AdvApi32.OpenSCManager(null, null, PInvoke.AdvApi32.ServiceManagerAccess.SC_MANAGER_ALL_ACCESS);
             if (hSCManager.IsInvalid == true)
             {
