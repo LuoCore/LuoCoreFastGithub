@@ -6,7 +6,7 @@
 		<OutputType>WinExe</OutputType>
 		<LangVersion>8.0</LangVersion> 
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<ApplicationIcon>app.ico</ApplicationIcon>
+		<ApplicationIcon>Resource\LuoGithub.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
 		<StartupObject></StartupObject>
@@ -22,6 +22,10 @@
 	  <EmbeddedResource Remove="bin\**" />
 	  <None Remove="bin\**" />
 	  <Page Remove="bin\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Resource\LuoGithub.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
