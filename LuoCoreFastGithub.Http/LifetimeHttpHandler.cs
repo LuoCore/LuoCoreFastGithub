@@ -18,13 +18,14 @@ namespace LuoCoreFastGithub.Http
         /// 具有生命周期的HttpHandler
         /// </summary>
         /// <param name="domainResolver"></param>
+        /// <param name="failureReporter"></param>
         /// <param name="lifeTimeKey"></param>
         /// <param name="lifeTime"></param>
         /// <param name="deactivateAction"></param>
-        public LifetimeHttpHandler(IDomainResolver domainResolver, LifeTimeKey lifeTimeKey, TimeSpan lifeTime, Action<LifetimeHttpHandler> deactivateAction)
+        public LifetimeHttpHandler(IDomainResolver domainResolver, IConnectionFailureReporter failureReporter, LifeTimeKey lifeTimeKey, TimeSpan lifeTime, Action<LifetimeHttpHandler> deactivateAction)
         {
             this.LifeTimeKey = lifeTimeKey;
-            this.InnerHandler = new HttpClientHandler(lifeTimeKey.DomainConfig, domainResolver);
+            this.InnerHandler = new HttpClientHandler(lifeTimeKey.DomainConfig, domainResolver, failureReporter);
             this.timer = new Timer(this.OnTimerCallback, deactivateAction, lifeTime, Timeout.InfiniteTimeSpan);
         }
 

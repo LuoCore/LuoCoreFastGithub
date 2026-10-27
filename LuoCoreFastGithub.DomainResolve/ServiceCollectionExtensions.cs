@@ -21,6 +21,7 @@ namespace LuoCoreFastGithub
             services.TryAddSingleton<DohResolver>();
             services.TryAddSingleton<PersistenceService>();
             services.TryAddSingleton<IPAddressService>();
+            services.TryAddSingleton<IConnectionFailureReporter>(provider => provider.GetRequiredService<IPAddressService>());
             services.TryAddSingleton<IDomainResolver, DomainResolver>();
             services.AddHostedService<DomainResolveHostedService>();
             return services;

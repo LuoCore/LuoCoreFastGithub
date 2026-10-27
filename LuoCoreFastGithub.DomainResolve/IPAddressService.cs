@@ -23,7 +23,7 @@ namespace LuoCoreFastGithub.DomainResolve
     /// 对https目标的探测与真实转发一致：完成tls握手(按域名配置的SNI策略)，
     /// 排除"tcp可连但tls即断"的节点，避免劣化ip被优选
     /// </summary>
-    sealed class IPAddressService
+    sealed class IPAddressService : IConnectionFailureReporter
     {
         private const int HTTPS_PORT = 443;
 
@@ -97,6 +97,22 @@ namespace LuoCoreFastGithub.DomainResolve
 
 
         /// <summary>
+        /// 回报真实请求中连接失败的ip节点
+        /// 将其时延置为不可用，使下个测速周期自动淘汰该节点
+        /// </summary>
+        /// <param name="endPoint"></param>
+        public void ReportFailure(IPEndPoint endPoint)
+        {
+            if (this.addressElapsedCache.TryGetValue<AddressElapsed>(endPoint, out var existing) &&
+                existing.Elapsed < TimeSpan.MaxValue)
+            {
+                var failureElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
+                this.addressElapsedCache.Set(endPoint, failureElapsed, this.problemElapsedExpiration);
+            }
+        }
+
+
+        /// <summary>
         /// 获取IP节点的时延
         /// </summary> 
         /// <param name="host">域名</param>
@@ -121,16 +137,17 @@ namespace LuoCoreFastGithub.DomainResolve
                 return await this.GetTlsAddressElapsedAsync(domainConfig, host, endPoint, cancellationToken);
             }
 
-            return await this.GetTcpAddressElapsedAsync(endPoint, cancellationToken);
+            return await this.GetTcpAddressElapsedAsync(host, endPoint, cancellationToken);
         }
 
         /// <summary>
         /// tcp连接探测
         /// </summary>
+        /// <param name="host">域名</param>
         /// <param name="endPoint"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<AddressElapsed> GetTcpAddressElapsedAsync(IPEndPoint endPoint, CancellationToken cancellationToken)
+        private async Task<AddressElapsed> GetTcpAddressElapsedAsync(string host, IPEndPoint endPoint, CancellationToken cancellationToken)
         {
             var stopWatch = Stopwatch.StartNew();
             try
@@ -147,6 +164,7 @@ namespace LuoCoreFastGithub.DomainResolve
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                this.domainAddressCache.Remove(new DomainAddress(host, endPoint.Address));
                 var addressElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
                 var expiration = IsLocalNetworkProblem(ex) ? this.problemElapsedExpiration : this.normalElapsedExpiration;
                 return this.addressElapsedCache.Set(endPoint, addressElapsed, expiration);
@@ -201,6 +219,7 @@ namespace LuoCoreFastGithub.DomainResolve
                 stopWatch.Stop();
             }
 
+            this.domainAddressCache.Remove(new DomainAddress(host, endPoint.Address));
             var problemElapsed = new AddressElapsed(endPoint.Address, TimeSpan.MaxValue);
             var problemExpiration = IsLocalNetworkProblem(lastException) ? this.problemElapsedExpiration : this.normalElapsedExpiration;
             return this.addressElapsedCache.Set(endPoint, problemElapsed, problemExpiration);

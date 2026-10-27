@@ -22,8 +22,9 @@ namespace LuoCoreFastGithub.Http
         /// </summary>
         /// <param name="domainConfig"></param>
         /// <param name="domainResolver"></param>
-        public HttpClient(DomainConfig domainConfig, IDomainResolver domainResolver)
-            : this(new HttpClientHandler(domainConfig, domainResolver), disposeHandler: true)
+        /// <param name="failureReporter"></param>
+        public HttpClient(DomainConfig domainConfig, IDomainResolver domainResolver, IConnectionFailureReporter failureReporter)
+            : this(new HttpClientHandler(domainConfig, domainResolver, failureReporter), disposeHandler: true)
         {
         }
 

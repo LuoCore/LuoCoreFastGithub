@@ -4,15 +4,17 @@ using Microsoft.Extensions.Options;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 
 namespace LuoCoreFastGithub
 {
     /// <summary>
     /// Windows系统代理配置器
-    /// 降级模式：把WinINET系统代理指向本地转发代理端口(浏览器/Edge/大部分应用自动走代理)，
+    /// 白名单模式：生成本地proxy.pac并接管自动配置脚本，仅加速域名走本地代理，其余流量直连；
     /// 程序退出时还原原始代理设置
     /// </summary>
     [SupportedOSPlatform("windows")]
@@ -26,21 +28,28 @@ namespace LuoCoreFastGithub
         private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int dwBufferLength);
 
         private readonly IOptions<LuoCoreFastGithubOptions> options;
+        private readonly LuoCoreFastGithubConfig fastGithubConfig;
         private readonly ILogger<SystemProxyConfig> logger;
 
         private string? savedProxyEnable;
         private string? savedProxyServer;
         private string? savedProxyOverride;
+        private string? savedAutoConfigUrl;
         private bool applied;
 
         /// <summary>
         /// 系统代理配置器
         /// </summary>
         /// <param name="options"></param>
+        /// <param name="fastGithubConfig"></param>
         /// <param name="logger"></param>
-        public SystemProxyConfig(IOptions<LuoCoreFastGithubOptions> options, ILogger<SystemProxyConfig> logger)
+        public SystemProxyConfig(
+            IOptions<LuoCoreFastGithubOptions> options,
+            LuoCoreFastGithubConfig fastGithubConfig,
+            ILogger<SystemProxyConfig> logger)
         {
             this.options = options;
+            this.fastGithubConfig = fastGithubConfig;
             this.logger = logger;
         }
 
@@ -50,7 +59,7 @@ namespace LuoCoreFastGithub
         public bool IsApplied => this.applied;
 
         /// <summary>
-        /// 把系统代理指向本地代理端口
+        /// 以proxy.pac白名单接管系统代理
         /// </summary>
         /// <returns></returns>
         public bool Apply()
@@ -58,6 +67,9 @@ namespace LuoCoreFastGithub
             var httpProxyPort = this.options.Value.HttpProxyPort;
             try
             {
+                var pacFile = Path.Combine(AppContext.BaseDirectory, "proxy.pac");
+                File.WriteAllText(pacFile, this.BuildPac(httpProxyPort), new UTF8Encoding(false));
+
                 using var settings = Registry.CurrentUser.OpenSubKey(INTERNET_SETTINGS, writable: true);
                 if (settings == null)
                 {
@@ -68,38 +80,57 @@ namespace LuoCoreFastGithub
                 this.savedProxyEnable = settings.GetValue("ProxyEnable")?.ToString();
                 this.savedProxyServer = settings.GetValue("ProxyServer")?.ToString();
                 this.savedProxyOverride = settings.GetValue("ProxyOverride")?.ToString();
+                this.savedAutoConfigUrl = settings.GetValue("AutoConfigURL")?.ToString();
 
+                settings.SetValue("AutoConfigURL", $"file:///{pacFile.Replace('\\', '/')}", RegistryValueKind.String);
                 settings.SetValue("ProxyServer", $"127.0.0.1:{httpProxyPort}", RegistryValueKind.String);
-
-                // 旁路列表中不能有加速域名(旧版冲突处理可能添加过)，否则浏览器会绕过代理直连
-                settings.SetValue("ProxyOverride", CleanOverride(this.savedProxyOverride), RegistryValueKind.String);
+                settings.SetValue("ProxyOverride", "<-loopback>", RegistryValueKind.String);
                 settings.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
 
                 NotifySettingsChanged();
                 this.applied = true;
-                this.logger.LogInformation($"已设置系统代理 http://127.0.0.1:{httpProxyPort}（退出后自动还原）");
+                this.logger.LogInformation($"已设置系统代理白名单模式(仅加速域名走http://127.0.0.1:{httpProxyPort}，其余直连；退出后自动还原)");
                 return true;
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"设置系统代理失败：{ex.Message}，请手动设置代理 127.0.0.1:{httpProxyPort}");
+                this.logger.LogWarning($"设置系统代理失败：{ex.Message}，请手动设置自动代理脚本指向本程序目录的proxy.pac");
                 return false;
             }
+        }
 
-            static string CleanOverride(string? value)
+
+        /// <summary>
+        /// 生成白名单pac脚本：加速域名走代理，其余直连
+        /// 域名表达式与转发层同源(DomainPattern)
+        /// </summary>
+        /// <param name="httpProxyPort"></param>
+        /// <returns></returns>
+        private string BuildPac(int httpProxyPort)
+        {
+            var shExpPatterns = new List<string>();
+            foreach (var pattern in this.fastGithubConfig.GetDomainPatterns())
             {
-                var bypassHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                var items = (value ?? string.Empty)
-                    .Split(';', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(item => item.Trim())
-                    .Where(item => item.Length > 0)
-                    .ToList();
-                if (items.Any(item => item.Equals("<-loopback>", StringComparison.OrdinalIgnoreCase)) == false)
+                var text = pattern.ToString();
+                shExpPatterns.Add(text);
+                if (text.StartsWith("*."))
                 {
-                    items.Add("<-loopback>");
+                    shExpPatterns.Add(text[2..]);
                 }
-                return string.Join(";", items);
             }
+            shExpPatterns.Sort(StringComparer.OrdinalIgnoreCase);
+
+            var builder = new StringBuilder();
+            builder.AppendLine("function FindProxyForURL(url, host) {");
+            builder.AppendLine($"    var proxy = 'PROXY 127.0.0.1:{httpProxyPort}';");
+            builder.AppendLine("    host = host.toLowerCase();");
+            foreach (var item in shExpPatterns.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                builder.AppendLine($"    if (shExpMatch(host, '{item}')) return proxy;");
+            }
+            builder.AppendLine("    return 'DIRECT';");
+            builder.AppendLine("}");
+            return builder.ToString();
         }
 
         /// <summary>
@@ -123,6 +154,14 @@ namespace LuoCoreFastGithub
 
                 settings.SetValue("ProxyServer", this.savedProxyServer ?? string.Empty, RegistryValueKind.String);
                 settings.SetValue("ProxyOverride", this.savedProxyOverride ?? string.Empty, RegistryValueKind.String);
+                if (string.IsNullOrEmpty(this.savedAutoConfigUrl))
+                {
+                    settings.DeleteValue("AutoConfigURL", false);
+                }
+                else
+                {
+                    settings.SetValue("AutoConfigURL", this.savedAutoConfigUrl, RegistryValueKind.String);
+                }
                 if (int.TryParse(this.savedProxyEnable, out var enable))
                 {
                     settings.SetValue("ProxyEnable", enable, RegistryValueKind.DWord);
@@ -158,8 +197,11 @@ namespace LuoCoreFastGithub
                 }
 
                 var proxyServer = settings.GetValue("ProxyServer")?.ToString();
+                var autoConfigUrl = settings.GetValue("AutoConfigURL")?.ToString();
                 var enable = settings.GetValue("ProxyEnable")?.ToString();
-                if (proxyServer == null || proxyServer.Contains($"127.0.0.1:{httpProxyPort}") == false)
+                var isOurs = (proxyServer != null && proxyServer.Contains($"127.0.0.1:{httpProxyPort}")) ||
+                    (autoConfigUrl != null && autoConfigUrl.EndsWith("proxy.pac") && File.Exists(Path.Combine(AppContext.BaseDirectory, "proxy.pac")));
+                if (isOurs == false)
                 {
                     return false;
                 }
@@ -168,7 +210,7 @@ namespace LuoCoreFastGithub
                 {
                     settings.SetValue("ProxyEnable", 0, RegistryValueKind.DWord);
                     NotifySettingsChanged();
-                    this.logger.LogInformation("内核拦截模式已启用，清除降级模式设置的系统代理");
+                    this.logger.LogInformation("内核拦截模式已启用，清除白名单模式设置的系统代理");
                 }
                 return true;
             }

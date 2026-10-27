@@ -11,6 +11,7 @@ namespace LuoCoreFastGithub.Http
     sealed class HttpClientFactory : IHttpClientFactory
     {
         private readonly IDomainResolver domainResolver;
+        private readonly IConnectionFailureReporter failureReporter;
 
         /// <summary>
         /// 首次生命周期
@@ -37,9 +38,11 @@ namespace LuoCoreFastGithub.Http
         /// HttpClient工厂
         /// </summary>
         /// <param name="domainResolver"></param>
-        public HttpClientFactory(IDomainResolver domainResolver)
+        /// <param name="failureReporter"></param>
+        public HttpClientFactory(IDomainResolver domainResolver, IConnectionFailureReporter failureReporter)
         {
             this.domainResolver = domainResolver;
+            this.failureReporter = failureReporter;
         }
 
         /// <summary>
@@ -68,7 +71,7 @@ namespace LuoCoreFastGithub.Http
         /// <returns></returns>
         private LifetimeHttpHandler CreateLifetimeHttpHandler(LifeTimeKey lifeTimeKey, TimeSpan lifeTime)
         {
-            return new LifetimeHttpHandler(this.domainResolver, lifeTimeKey, lifeTime, this.OnLifetimeHttpHandlerDeactivate);
+            return new LifetimeHttpHandler(this.domainResolver, this.failureReporter, lifeTimeKey, lifeTime, this.OnLifetimeHttpHandlerDeactivate);
         }
 
         /// <summary>

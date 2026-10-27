@@ -22,17 +22,20 @@ namespace LuoCoreFastGithub.Http
     {
         private readonly DomainConfig domainConfig;
         private readonly IDomainResolver domainResolver;
+        private readonly IConnectionFailureReporter failureReporter;
         private readonly TimeSpan connectTimeout = TimeSpan.FromSeconds(10d);
 
         /// <summary>
         /// HttpClientHandler
         /// </summary>
         /// <param name="domainConfig"></param>
-        /// <param name="domainResolver"></param> 
-        public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver)
+        /// <param name="domainResolver"></param>
+        /// <param name="failureReporter"></param>
+        public HttpClientHandler(DomainConfig domainConfig, IDomainResolver domainResolver, IConnectionFailureReporter failureReporter)
         {
             this.domainConfig = domainConfig;
             this.domainResolver = domainResolver;
+            this.failureReporter = failureReporter;
             this.InnerHandler = this.CreateSocketsHttpHandler();
         }
 
@@ -107,10 +110,12 @@ namespace LuoCoreFastGithub.Http
                 catch (OperationCanceledException)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    this.failureReporter.ReportFailure(ipEndPoint);
                     innerExceptions.Add(new HttpConnectTimeoutException(ipEndPoint.Address));
                 }
                 catch (Exception ex)
                 {
+                    this.failureReporter.ReportFailure(ipEndPoint);
                     innerExceptions.Add(ex);
                 }
             }

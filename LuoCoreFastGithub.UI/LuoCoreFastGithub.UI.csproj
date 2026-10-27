@@ -10,7 +10,6 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
 		<StartupObject></StartupObject>
-		<BaseOutputPath>D:\CodeRepository\Git\LuoCoreFastGithub\Resources</BaseOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
