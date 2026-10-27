@@ -60,7 +60,27 @@ namespace LuoCoreFastGithub.Configuration
                 return Configuration.TlsSniPattern.Domain;
             }
             return new TlsSniPattern(this.TlsSniPattern);
-        } 
+        }
+
+        /// <summary>
+        /// 获取tls握手的候选SNI模式
+        /// 优先使用域名配置指定的模式；
+        /// 当配置为无SNI时，追加伪装域名模式作为容错，
+        /// 以适配拒绝空SNI、但接受其它SNI的cdn边缘节点
+        /// </summary>
+        /// <param name="host">目标域名</param>
+        /// <returns></returns>
+        public TlsSniPattern[] GetHandshakeSniPatterns(string host)
+        {
+            var primary = this.GetTlsSniPattern().WithDomain(host).WithRandom();
+            if (primary.Value.Length > 0)
+            {
+                return new[] { primary };
+            }
+
+            var decoy = new TlsSniPattern(Configuration.TlsSniPattern.Random.Value).WithRandom();
+            return new[] { primary, decoy };
+        }
     }
 
 }

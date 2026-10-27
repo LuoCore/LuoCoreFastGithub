@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using PInvoke;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -114,7 +114,7 @@ namespace LuoCoreFastGithub
             var state = true;
             if (cmd == Command.Start)
             {
-                state = ServiceInstallUtil.InstallAndStartService(serviceName, binaryPath);
+                state = ServiceInstallUtil.InstallAndStartService(serviceName, binaryPath, "auto");
             }
             else if (cmd == Command.Stop)
             {

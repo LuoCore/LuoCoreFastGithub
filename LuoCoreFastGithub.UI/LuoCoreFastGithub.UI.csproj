@@ -4,8 +4,8 @@
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<OutputType>WinExe</OutputType>
-		<LangVersion>8.0</LangVersion> 
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<LangVersion>10.0</LangVersion> 
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<ApplicationIcon>Resource\LuoGithub.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
@@ -30,10 +30,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="LiveCharts.Wpf.Core" Version="0.9.8" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3">
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 
 	<ItemGroup>

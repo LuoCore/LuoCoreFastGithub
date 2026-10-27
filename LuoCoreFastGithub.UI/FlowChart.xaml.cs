@@ -73,7 +73,14 @@ namespace LuoCoreFastGithub.UI
 
         private async Task FlushFlowStatisticsAsync(HttpClient httpClient)
         {
-            var response = await httpClient.GetAsync("http://localhost/flowStatistics");
+            // 使用与后端握手的固定api端口，不再猜测反向代理端口
+            if (Program.FlowApiPort <= 0)
+            {
+                return;
+            }
+
+            var url = $"http://127.0.0.1:{Program.FlowApiPort}/flowStatistics";
+            var response = await httpClient.GetAsync(url);
             var json = await response.EnsureSuccessStatusCode().Content.ReadAsStringAsync();
             var flowStatistics = JsonConvert.DeserializeObject<FlowStatistics>(json);
             if (flowStatistics == null)

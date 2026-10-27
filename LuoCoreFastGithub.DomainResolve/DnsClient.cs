@@ -27,6 +27,7 @@ namespace LuoCoreFastGithub.DomainResolve
         private const string LOCALHOST = "localhost";
 
         private readonly DnscryptProxy dnscryptProxy;
+        private readonly DohResolver dohResolver;
         private readonly LuoCoreFastGithubConfig LuoCoreFastGithubConfig;
         private readonly ILogger<DnsClient> logger;
 
@@ -51,10 +52,12 @@ namespace LuoCoreFastGithub.DomainResolve
         /// <param name="logger"></param>
         public DnsClient(
             DnscryptProxy dnscryptProxy,
+            DohResolver dohResolver,
             LuoCoreFastGithubConfig LuoCoreFastGithubConfig,
             ILogger<DnsClient> logger)
         {
             this.dnscryptProxy = dnscryptProxy;
+            this.dohResolver = dohResolver;
             this.LuoCoreFastGithubConfig = LuoCoreFastGithubConfig;
             this.logger = logger;
         }
@@ -69,12 +72,40 @@ namespace LuoCoreFastGithub.DomainResolve
         public async IAsyncEnumerable<IPAddress> ResolveAsync(DnsEndPoint endPoint, bool fastSort, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var hashSet = new HashSet<IPAddress>();
+
+            // 优先走内置DoH解析，不受dnscrypt-proxy进程状态影响
+            if (this.LuoCoreFastGithubConfig.DohEndpoints.Length > 0 && endPoint.Host != LOCALHOST)
+            {
+                IPAddress[] dohAddresses;
+                try
+                {
+                    dohAddresses = await this.dohResolver.ResolveAsync(endPoint.Host, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogDebug($"DoH解析{endPoint.Host}异常：{ex.Message}");
+                    dohAddresses = Array.Empty<IPAddress>();
+                }
+
+                foreach (var address in dohAddresses)
+                {
+                    if (hashSet.Add(address))
+                    {
+                        yield return address;
+                    }
+                }
+            }
+
             await foreach (var dns in this.GetDnsServersAsync(cancellationToken))
             {
                 var addresses = await this.LookupAsync(dns, endPoint, fastSort, cancellationToken);
                 foreach (var address in addresses)
                 {
-                    if (hashSet.Add(address) == true)
+                    if (hashSet.Add(address))
                     {
                         yield return address;
                     }

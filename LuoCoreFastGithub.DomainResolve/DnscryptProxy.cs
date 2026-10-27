@@ -7,7 +7,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using static PInvoke.AdvApi32;
 
 namespace LuoCoreFastGithub.DomainResolve
 {
@@ -17,6 +16,7 @@ namespace LuoCoreFastGithub.DomainResolve
     sealed class DnscryptProxy
     {
         private readonly ILogger<DnscryptProxy> logger;
+        private readonly LuoCoreFastGithubConfig fastGithubConfig;
         private readonly string processName;
         private readonly string serviceName;
         private readonly string exeFilePath;
@@ -36,12 +36,14 @@ namespace LuoCoreFastGithub.DomainResolve
         /// DnscryptProxy服务
         /// </summary>
         /// <param name="logger"></param>
-        public DnscryptProxy(ILogger<DnscryptProxy> logger)
+        /// <param name="fastGithubConfig"></param>
+        public DnscryptProxy(ILogger<DnscryptProxy> logger, LuoCoreFastGithubConfig fastGithubConfig)
         {
             const string PATH = "dnscrypt-proxy";
             const string NAME = "dnscrypt-proxy";
 
             this.logger = logger;
+            this.fastGithubConfig = fastGithubConfig;
             this.processName = NAME;
             this.serviceName = $"{nameof(LuoCoreFastGithub)}.{NAME}";
             this.exeFilePath = Path.Combine(PATH, OperatingSystem.IsWindows() ? $"{NAME}.exe" : NAME);
@@ -55,6 +57,12 @@ namespace LuoCoreFastGithub.DomainResolve
         /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            if (this.fastGithubConfig.EnableDnscrypt == false)
+            {
+                this.logger.LogInformation("dnscrypt-proxy未启用，域名解析使用内置DoH链路");
+                return;
+            }
+
             try
             {
                 await this.StartCoreAsync(cancellationToken);
@@ -83,7 +91,7 @@ namespace LuoCoreFastGithub.DomainResolve
             if (OperatingSystem.IsWindows() && Environment.UserInteractive == false)
             {
                 ServiceInstallUtil.StopAndDeleteService(this.serviceName);
-                ServiceInstallUtil.InstallAndStartService(this.serviceName, this.exeFilePath, ServiceStartType.SERVICE_DEMAND_START);
+                ServiceInstallUtil.InstallAndStartService(this.serviceName, this.exeFilePath, "demand");
                 this.process = Process.GetProcessesByName(this.processName).FirstOrDefault(item => item.SessionId == 0);
             }
             else

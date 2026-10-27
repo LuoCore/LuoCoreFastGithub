@@ -13,6 +13,12 @@ namespace LuoCoreFastGithub.UI
         private const string MUTEX_NAME = "Global\\LuoCoreFastGithub.UI";
         private const string MAIN_WINDOWS = "MainWindow.xaml";
         private const string LuoCoreFastGithub_PATH = "LuoCoreFastGithub.exe";
+        private const int FLOW_API_PORT_MIN = 38900;
+
+        /// <summary>
+        /// 与后端握手的流量统计api端口
+        /// </summary>
+        public static int FlowApiPort { get; private set; }
 
         [STAThread]
         static void Main(string[] args)
@@ -23,6 +29,7 @@ namespace LuoCoreFastGithub.UI
             {
                 return;
             }
+            FlowApiPort = SelectFlowApiPort();
             StartLuoCoreFastGithub();
             SetWebBrowserDPI();
             SetWebBrowserVersion();
@@ -94,14 +101,37 @@ namespace LuoCoreFastGithub.UI
                 return;
             }
 
+            var flowApiArg = FlowApiPort > 0 ? $" --LuoCoreFastGithub:flowApiPort={FlowApiPort}" : string.Empty;
             var startInfo = new ProcessStartInfo
             {
                 FileName = LuoCoreFastGithub_PATH,
-                Arguments = $"ParentProcessId={Process.GetCurrentProcess().Id} UdpLoggerPort={UdpLogger.Port}",
+                Arguments = $"--ParentProcessId={Process.GetCurrentProcess().Id} --UdpLoggerPort={UdpLogger.Port}{flowApiArg}",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
             Process.Start(startInfo);
+        }
+
+        /// <summary>
+        /// 选择一个本机可用的tcp端口作为流量统计api端口
+        /// </summary>
+        /// <returns></returns>
+        private static int SelectFlowApiPort()
+        {
+            for (var port = FLOW_API_PORT_MIN; port < FLOW_API_PORT_MIN + 100; port++)
+            {
+                try
+                {
+                    var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, port);
+                    listener.Start();
+                    listener.Stop();
+                    return port;
+                }
+                catch (System.Net.Sockets.SocketException)
+                {
+                }
+            }
+            return 0;
         }
     }
 }

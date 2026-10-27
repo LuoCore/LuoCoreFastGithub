@@ -127,25 +127,54 @@ namespace LuoCoreFastGithub.Http
         /// <returns></returns>
         private async ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, IPEndPoint ipEndPoint, CancellationToken cancellationToken)
         {
-            var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            await socket.ConnectAsync(ipEndPoint, cancellationToken);
-            var stream = new NetworkStream(socket, ownsSocket: true);
-
             var requestContext = context.InitialRequestMessage.GetRequestContext();
             if (requestContext.IsHttps == false)
             {
-                return stream;
+                var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                await socket.ConnectAsync(ipEndPoint, cancellationToken);
+                return new NetworkStream(socket, ownsSocket: true);
             }
 
-            var tlsSniValue = requestContext.TlsSniValue.WithIPAddress(ipEndPoint.Address);
-            var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
-            await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+            // 依次尝试配置的sni模式与伪装sni模式，适配对空sni收紧的cdn边缘节点
+            var patterns = this.GetHandshakePatterns(requestContext, context.DnsEndPoint.Host, ipEndPoint.Address);
+            for (var index = 0; index < patterns.Length; index++)
             {
-                TargetHost = tlsSniValue.Value,
-                RemoteCertificateValidationCallback = ValidateServerCertificate
-            }, cancellationToken);
+                var targetHost = patterns[index].Value;
+                var sslStream = await ConnectAndHandshakeAsync(ipEndPoint, targetHost, cancellationToken);
+                try
+                {
+                    await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+                    {
+                        TargetHost = targetHost,
+                        RemoteCertificateValidationCallback = ValidateServerCertificate
+                    }, cancellationToken);
+                    return sslStream;
+                }
+                catch (Exception ex) when (index < patterns.Length - 1)
+                {
+                    // 握手失败则丢弃连接，更换下一个sni模式重试
+                    sslStream.Dispose();
+                    System.Diagnostics.Debug.WriteLine($"tls握手{ipEndPoint.Address}使用sni'{targetHost}'失败({ex.Message})，尝试下一模式");
+                }
+            }
 
-            return sslStream;
+            // 最后一个模式失败时异常已在循环内抛出，此处仅作防御
+            throw new InvalidOperationException($"tls握手{ipEndPoint.Address}失败");
+
+            static async Task<SslStream> ConnectAndHandshakeAsync(IPEndPoint ipEndPoint, string targetHost, CancellationToken cancellationToken)
+            {
+                var socket = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                try
+                {
+                    await socket.ConnectAsync(ipEndPoint, cancellationToken);
+                    return new SslStream(new NetworkStream(socket, ownsSocket: true), leaveInnerStreamOpen: false);
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            }
 
             // 验证证书有效性
             bool ValidateServerCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
@@ -164,6 +193,25 @@ namespace LuoCoreFastGithub.Http
 
                 return errors == SslPolicyErrors.None;
             }
+        }
+
+        /// <summary>
+        /// 获取tls握手的候选sni模式
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <param name="host"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private TlsSniPattern[] GetHandshakePatterns(RequestContext requestContext, string host, IPAddress address)
+        {
+            var primary = requestContext.TlsSniValue.WithIPAddress(address);
+            if (primary.Value.Length > 0 || this.domainConfig.TlsSni == true)
+            {
+                return new[] { primary };
+            }
+
+            var decoy = new TlsSniPattern(TlsSniPattern.Random.Value).WithIPAddress(address).WithRandom();
+            return new[] { primary, decoy };
         }
 
         /// <summary>

@@ -7,10 +7,9 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 
 		<Version>2.0.0</Version>
-		<BaseOutputPath>D:\CodeRepository\Git\LuoCoreFastGithub\Resources</BaseOutputPath>
 	</PropertyGroup>
 
 
@@ -18,19 +17,19 @@
 
 	<ItemGroup>
 		<PackageReference Include="DnsCrypt.Blacklist" Version="0.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
-		<PackageReference Include="Serilog.Sinks.Network" Version="2.0.2.68" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.14" />
+		<PackageReference Include="Serilog.Sinks.Network" Version="3.0.0" />
 		<ProjectReference Include="..\LuoCoreFastGithub.DomainResolve\LuoCoreFastGithub.DomainResolve.csproj" />
 		<ProjectReference Include="..\LuoCoreFastGithub.HttpServer\LuoCoreFastGithub.HttpServer.csproj" />
 		<ProjectReference Include="..\LuoCoreFastGithub.PacketIntercept\LuoCoreFastGithub.PacketIntercept.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-		<PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -40,6 +39,12 @@
 		<None Update="appsettings/appsettings.*.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- WinDivert原生库与驱动：DNS/TCP包拦截层依赖，构建/发布时平铺拷贝到输出根目录 -->
+		<None Include="@windivert\WinDivert.dll" Link="WinDivert.dll" CopyToOutputDirectory="PreserveNewest" Pack="false" />
+		<None Include="@windivert\WinDivert64.sys" Link="WinDivert64.sys" CopyToOutputDirectory="PreserveNewest" Pack="false" />
 	</ItemGroup>
 
 	<ItemGroup>

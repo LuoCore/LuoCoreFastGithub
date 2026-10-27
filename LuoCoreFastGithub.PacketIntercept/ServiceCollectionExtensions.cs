@@ -20,6 +20,7 @@ namespace LuoCoreFastGithub
         [SupportedOSPlatform("windows")]
         public static IServiceCollection AddPacketIntercept(this IServiceCollection services)
         {
+            services.AddSingleton<PacketInterceptCapability>();
             services.AddSingleton<IDnsConflictSolver, HostsConflictSolver>();
             services.AddSingleton<IDnsConflictSolver, ProxyConflictSolver>();
             services.TryAddSingleton<IDnsInterceptor, DnsInterceptor>();

@@ -21,6 +21,16 @@ namespace LuoCoreFastGithub.Configuration
         public int HttpProxyPort { get; set; }
 
         /// <summary>
+        /// 是否启用外置dnscrypt-proxy进程
+        /// </summary>
+        public bool EnableDnscrypt { get; set; }
+
+        /// <summary>
+        /// 内置DoH解析服务地址
+        /// </summary>
+        public string[] DohEndpoints { get; set; }
+
+        /// <summary>
         /// 回退的dns
         /// </summary>
         public IPEndPoint[] FallbackDns { get; set; }
@@ -35,6 +45,8 @@ namespace LuoCoreFastGithub.Configuration
             var opt = options.CurrentValue;
 
             this.HttpProxyPort = opt.HttpProxyPort;
+            this.EnableDnscrypt = opt.EnableDnscrypt;
+            this.DohEndpoints = opt.DohEndpoints;
             this.FallbackDns = opt.FallbackDns;
             this.domainConfigs = ConvertDomainConfigs(opt.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();
@@ -49,6 +61,8 @@ namespace LuoCoreFastGithub.Configuration
         private void Update(LuoCoreFastGithubOptions options)
         {
             this.HttpProxyPort = options.HttpProxyPort;
+            this.EnableDnscrypt = options.EnableDnscrypt;
+            this.DohEndpoints = options.DohEndpoints;
             this.FallbackDns = options.FallbackDns;
             this.domainConfigs = ConvertDomainConfigs(options.DomainConfigs);
             this.domainConfigCache = new ConcurrentDictionary<string, DomainConfig?>();

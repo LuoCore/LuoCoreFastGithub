@@ -31,6 +31,9 @@
 
 # server_names = ['scaleway-fr', 'google', 'yandex', 'cloudflare']
 
+## 使用静态服务器，无需下载远程列表（解决中国网络环境下无法访问 raw.githubusercontent.com 的问题）
+server_names = ['cloudflare', 'google', 'alidns-doh', 'dnspod-doh']
+
 
 ## List of local addresses and ports to listen to. Can be IPv4 and/or IPv6.
 ## Example with both IPv4 and IPv6:
@@ -853,5 +856,18 @@ skip_incompatible = false
 
 [static]
 
-  # [static.'myserver']
-  # stamp = 'sdns://AQcAAAAAAAAAAAAQMi5kbnNjcnlwdC1jZXJ0Lg'
+  # Cloudflare DoH - 全球最快DNS之一
+  [static.'cloudflare']
+    stamp = 'sdns://AgcAAAAAAAAABzEuMC4wLjGgENk8mGFnIfOzE28JEezHEi3OY3jAgiLQFJhZBB4Ag2NvZGMA'
+
+  # Google DoH - 稳定可靠
+  [static.'google']
+    stamp = 'sdns://AgUAAAAAAAAABzguOC44LjikBHTRjAXMyjzP1YNAgCm2OzP9tQKDkU2JcO8JMbvMgDKAJ0UAg2dvb2dsZQ'
+
+  # 阿里 DNS DoH - 国内快速
+  [static.'alidns-doh']
+    stamp = 'sdns://AgcAAAAAAAAACTIyMy41LjUuNSC3Mi1HXIu17GPH3iJHpGi1gI82eC5h3GQ5i7sCJxPm2hHkDQEYWxpZG5zLmNu'
+
+  # 腾讯 DNSPod DoH - 国内快速
+  [static.'dnspod-doh']
+    stamp = 'sdns://AgcAAAAAAAAACzExOS4yOS4yOS4yOCHTjKZ0cP4bPnSGNG3tN6J9gZ7gEkJLD2G3qP-JcAeUAUyZG5zLnRlbg'

@@ -18,6 +18,7 @@ namespace LuoCoreFastGithub
         {
             services.TryAddSingleton<DnsClient>();
             services.TryAddSingleton<DnscryptProxy>();
+            services.TryAddSingleton<DohResolver>();
             services.TryAddSingleton<PersistenceService>();
             services.TryAddSingleton<IPAddressService>();
             services.TryAddSingleton<IDomainResolver, DomainResolver>();

@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using LuoCoreFastGithub.HttpServer;
 using System;
 using System.IO;
 
@@ -37,8 +40,20 @@ namespace LuoCoreFastGithub
             var builder = WebApplication.CreateBuilder(options);
             builder.ConfigureHost();
             builder.ConfigureWebHost();
+            builder.WebHost.ConfigureKestrel(kestrel =>
+            {
+                kestrel.ListenFlowApi();
+                if (OperatingSystem.IsWindows())
+                {
+                    kestrel.ListenHttpProxyIfAvailable();
+                }
+            });
             builder.ConfigureConfiguration();
             builder.ConfigureServices();
+            if (OperatingSystem.IsWindows())
+            {
+                builder.Services.AddSingleton<SystemProxyConfig>();
+            }
 
             var app = builder.Build();
             app.ConfigureApp();

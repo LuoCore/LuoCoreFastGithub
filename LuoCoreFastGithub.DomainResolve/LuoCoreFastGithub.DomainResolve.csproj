@@ -1,17 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.49-beta">
+		<PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.367">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="PInvoke.AdvApi32" Version="0.7.124" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
 		<PackageReference Include="Tommy" Version="3.1.2" />
 		<ProjectReference Include="..\LuoCoreFastGithub.Configuration\LuoCoreFastGithub.Configuration.csproj" />
 	</ItemGroup>

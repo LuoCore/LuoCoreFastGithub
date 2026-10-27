@@ -17,6 +17,7 @@ namespace LuoCoreFastGithub.PacketIntercept
     sealed class TcpInterceptHostedService : BackgroundService
     {
         private readonly IEnumerable<ITcpInterceptor> tcpInterceptors;
+        private readonly PacketInterceptCapability capability;
         private readonly ILogger<TcpInterceptHostedService> logger;
         private readonly IHost host;
 
@@ -24,14 +25,17 @@ namespace LuoCoreFastGithub.PacketIntercept
         /// tcp拦截后台服务
         /// </summary>
         /// <param name="tcpInterceptors"></param>
+        /// <param name="capability"></param>
         /// <param name="logger"></param>
         /// <param name="host"></param>
         public TcpInterceptHostedService(
             IEnumerable<ITcpInterceptor> tcpInterceptors,
+            PacketInterceptCapability capability,
             ILogger<TcpInterceptHostedService> logger,
             IHost host)
         {
             this.tcpInterceptors = tcpInterceptors;
+            this.capability = capability;
             this.logger = logger;
             this.host = host;
         }
@@ -43,6 +47,11 @@ namespace LuoCoreFastGithub.PacketIntercept
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            if (this.capability.IsAvailable == false)
+            {
+                return;
+            }
+
             try
             {
                 var tasks = this.tcpInterceptors.Select(item => item.InterceptAsync(stoppingToken));

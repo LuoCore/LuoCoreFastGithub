@@ -1,5 +1,6 @@
 ﻿using LuoCoreFastGithub;
 using LuoCoreFastGithub.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,6 +23,7 @@ namespace LuoCoreLuoCoreFastGithub
         private readonly IOptions<AppOptions> appOptions;
         private readonly IOptions<LuoCoreFastGithubOptions> LuoCoreFastGithubOptions;
         private readonly ILogger<AppHostedService> logger;
+        private SystemProxyConfig systemProxy;
 
         public AppHostedService(
             IHost host,
@@ -55,8 +57,35 @@ namespace LuoCoreLuoCoreFastGithub
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1d), stoppingToken);
+            this.ApplyWindowsSystemProxyIfPossible();
             await this.CheckLuoCoreFastGithubProxyAsync(stoppingToken);
             await this.WaitForParentProcessExitAsync(stoppingToken);
+        }
+
+        /// <summary>
+        /// 停止时还原 windows 系统代理
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                this.systemProxy?.Restore();
+            }
+            await base.StopAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// windows桌面模式接管系统代理
+        /// </summary>
+        private void ApplyWindowsSystemProxyIfPossible()
+        {
+            if (OperatingSystem.IsWindows() && Environment.UserInteractive && this.appOptions.Value.AutoSetSystemProxy)
+            {
+                this.systemProxy = this.host.Services.GetService<SystemProxyConfig>();
+                this.systemProxy?.Apply();
+            }
         }
 
 

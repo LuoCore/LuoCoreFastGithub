@@ -60,6 +60,27 @@ namespace LuoCoreFastGithub
         }
 
         /// <summary>
+        /// 监听流量统计api
+        /// 端口由UI启动后端时通过--LuoCoreFastGithub:flowApiPort指定，
+        /// 避免UI硬编码猜测反向代理端口
+        /// </summary>
+        /// <param name="kestrel"></param>
+        public static void ListenFlowApi(this KestrelServerOptions kestrel)
+        {
+            var flowApiPort = kestrel.ApplicationServices
+                .GetRequiredService<IOptions<LuoCoreFastGithubOptions>>()
+                .Value.FlowApiPort;
+
+            if (flowApiPort <= 0 || GlobalListener.CanListenTcp(flowApiPort) == false)
+            {
+                return;
+            }
+
+            kestrel.ListenLocalhost(flowApiPort);
+            kestrel.GetLogger().LogInformation($"已监听http://localhost:{flowApiPort}，流量统计api启动完成");
+        }
+
+        /// <summary>
         /// 监听ssh协议代理
         /// </summary>
         /// <param name="kestrel"></param>

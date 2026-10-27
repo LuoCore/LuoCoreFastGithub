@@ -42,7 +42,12 @@ namespace LuoCoreFastGithub.DomainResolve
             try
             {
                 await this.dnscryptProxy.StartAsync(stoppingToken);
-                await Task.Delay(dnscryptProxyInitDelay, stoppingToken);
+
+                // dnscrypt未启用或未运行时，内置DoH链路即刻可用，无需等待
+                if (this.dnscryptProxy.LocalEndPoint != null)
+                {
+                    await Task.Delay(this.dnscryptProxyInitDelay, stoppingToken);
+                }
 
                 while (stoppingToken.IsCancellationRequested == false)
                 {
