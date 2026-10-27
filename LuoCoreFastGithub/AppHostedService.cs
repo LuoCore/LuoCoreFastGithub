@@ -78,14 +78,22 @@ namespace LuoCoreLuoCoreFastGithub
 
         /// <summary>
         /// windows桌面模式接管系统代理
+        /// 代理模式为效果主链路(浏览器CONNECT域名由代理用DoH干净解析)；
+        /// 透明拦截层即便可用也与其并行不冲突(覆盖不使用代理的程序)
         /// </summary>
         private void ApplyWindowsSystemProxyIfPossible()
         {
-            if (OperatingSystem.IsWindows() && Environment.UserInteractive && this.appOptions.Value.AutoSetSystemProxy)
+            if (OperatingSystem.IsWindows() == false || Environment.UserInteractive == false)
             {
-                this.systemProxy = this.host.Services.GetService<SystemProxyConfig>();
-                this.systemProxy?.Apply();
+                return;
             }
+            if (this.appOptions.Value.AutoSetSystemProxy == false)
+            {
+                return;
+            }
+
+            this.systemProxy = this.host.Services.GetService<SystemProxyConfig>();
+            this.systemProxy?.Apply();
         }
 
 

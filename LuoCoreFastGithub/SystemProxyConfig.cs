@@ -142,6 +142,44 @@ namespace LuoCoreFastGithub
         }
 
         /// <summary>
+        /// 若当前系统代理正指向本软件的转发端口则清除它
+        /// 用于驱动恢复可用(切回透明模式)时清理降级模式留下的代理设置，避免代理与DNS毒化互相干扰
+        /// </summary>
+        /// <returns></returns>
+        public bool ClearIfOurs()
+        {
+            var httpProxyPort = this.options.Value.HttpProxyPort;
+            try
+            {
+                using var settings = Registry.CurrentUser.OpenSubKey(INTERNET_SETTINGS, writable: true);
+                if (settings == null)
+                {
+                    return false;
+                }
+
+                var proxyServer = settings.GetValue("ProxyServer")?.ToString();
+                var enable = settings.GetValue("ProxyEnable")?.ToString();
+                if (proxyServer == null || proxyServer.Contains($"127.0.0.1:{httpProxyPort}") == false)
+                {
+                    return false;
+                }
+
+                if (enable == "1")
+                {
+                    settings.SetValue("ProxyEnable", 0, RegistryValueKind.DWord);
+                    NotifySettingsChanged();
+                    this.logger.LogInformation("内核拦截模式已启用，清除降级模式设置的系统代理");
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"清除系统代理失败：{ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 通知wininet代理设置变更
         /// </summary>
         private static void NotifySettingsChanged()
